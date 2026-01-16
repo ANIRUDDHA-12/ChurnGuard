@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+
+// Components
+import Sidebar from './components/Sidebar';
+import MetricCard from './components/MetricCard';
+import ActivityFeed from './components/ActivityFeed';
+import QuickActions from './components/QuickActions';
+import LiveChart from './components/LiveChart';
+import AdminPage from './components/AdminPage';
 
 // Socket.IO connection
 const socket = io('http://localhost:3001', {
@@ -16,23 +25,11 @@ function Toast({ message, type, onClose }) {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const styles = {
-    success: {
-      bg: 'bg-emerald-500/90',
-      icon: '✓',
-      border: 'border-emerald-400/30',
-    },
-    error: {
-      bg: 'bg-red-500/90',
-      icon: '✕',
-      border: 'border-red-400/30',
-    },
-    info: {
-      bg: 'bg-indigo-500/90',
-      icon: '⚡',
-      border: 'border-indigo-400/30',
-    },
-  }[type] || { bg: 'bg-indigo-500/90', icon: '⚡', border: 'border-indigo-400/30' };
+  const icons = {
+    success: '✓',
+    error: '✕',
+    info: '⚡',
+  };
 
   return (
     <motion.div
@@ -40,111 +37,27 @@ function Toast({ message, type, onClose }) {
       animate={{ x: 0, opacity: 1, scale: 1 }}
       exit={{ x: 100, opacity: 0, scale: 0.9 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className={`${styles.bg} ${styles.border} border text-white px-5 py-4 rounded-xl 
-                  shadow-2xl shadow-black/20 backdrop-blur-md flex items-center gap-3
-                  min-w-[280px]`}
+      className={`toast toast-${type}`}
     >
-      <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
-        {styles.icon}
-      </span>
-      <span className="font-medium text-sm">{message}</span>
+      <span className="toast-icon">{icons[type] || '⚡'}</span>
+      <span className="toast-message">{message}</span>
     </motion.div>
-  );
-}
-
-// Action button component
-function ActionButton({ icon, label, action, onClick, disabled }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.03, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => onClick(action)}
-      disabled={disabled}
-      className="btn-glow relative group 
-                 bg-gradient-to-br from-slate-800/80 via-slate-800/60 to-slate-900/80
-                 border border-slate-700/40 rounded-2xl 
-                 px-10 py-8
-                 hover:border-indigo-500/40 
-                 transition-all duration-500 ease-out
-                 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100
-                 flex flex-col items-center justify-center gap-4
-                 min-w-[180px] min-h-[160px]
-                 backdrop-blur-sm"
-    >
-      {/* Icon container with glow */}
-      <div className="relative">
-        <span className="text-5xl block group-hover:scale-110 transition-transform duration-300 ease-out">
-          {icon}
-        </span>
-        <div className="absolute inset-0 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)' }} />
-      </div>
-
-      {/* Label */}
-      <span className="text-slate-200 font-semibold text-lg tracking-wide 
-                       group-hover:text-white transition-colors duration-300">
-        {label}
-      </span>
-
-      {/* Animated underline */}
-      <span className="absolute bottom-4 left-1/2 -translate-x-1/2 
-                       w-0 h-0.5 rounded-full
-                       bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
-                       group-hover:w-2/3 transition-all duration-500 ease-out" />
-    </motion.button>
-  );
-}
-
-// Connection status indicator
-function ConnectionStatus({ isConnected }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-3 
-                 bg-slate-800/40 backdrop-blur-xl
-                 border border-slate-700/30 rounded-full 
-                 px-5 py-2.5
-                 shadow-lg shadow-black/10"
-    >
-      <div className="relative">
-        <div
-          className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${isConnected ? 'bg-emerald-400 connected-pulse' : 'bg-red-400'
-            }`}
-        />
-      </div>
-      <span className={`text-sm font-medium tracking-wide transition-colors duration-300 ${isConnected ? 'text-emerald-400' : 'text-red-400'
-        }`}>
-        {isConnected ? 'Connected' : 'Disconnected'}
-      </span>
-    </motion.div>
-  );
-}
-
-// Stats card component
-function StatCard({ value, label, icon, color }) {
-  const colorClasses = {
-    indigo: 'text-indigo-400',
-    emerald: 'text-emerald-400',
-    purple: 'text-purple-400',
-  }[color] || 'text-indigo-400';
-
-  return (
-    <div className="flex flex-col items-center gap-2 px-6 py-4">
-      <div className={`text-4xl font-bold stat-value ${colorClasses}`}>
-        {icon || value}
-      </div>
-      <div className="text-xs text-slate-500 uppercase tracking-widest font-medium">
-        {label}
-      </div>
-    </div>
   );
 }
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [toasts, setToasts] = useState([]);
-  const [actionCount, setActionCount] = useState(0);
+  const [activities, setActivities] = useState([]);
+  const [metrics, setMetrics] = useState({
+    totalActions: 0,
+    activeUsers: 1,
+    successRate: 100,
+    avgResponse: 0,
+  });
+  const [activeNav, setActiveNav] = useState('dashboard');
+  const [responseTimes, setResponseTimes] = useState([]);
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
   // Add toast notification
   const addToast = useCallback((message, type = 'info') => {
@@ -171,6 +84,19 @@ function App() {
 
     function onActionAck(data) {
       if (data.success) {
+        // Calculate response time
+        const responseTime = Date.now() - data.sentAt;
+        setResponseTimes((prev) => [...prev.slice(-9), responseTime]);
+
+        // Update success rate
+        setMetrics((prev) => ({
+          ...prev,
+          successRate: Math.round(
+            ((prev.totalActions * prev.successRate / 100) + 1) /
+            (prev.totalActions + 1) * 100
+          ),
+        }));
+
         addToast(`Action "${data.action}" confirmed`, 'success');
       }
     }
@@ -190,6 +116,16 @@ function App() {
     };
   }, [addToast]);
 
+  // Calculate average response time
+  useEffect(() => {
+    if (responseTimes.length > 0) {
+      const avg = Math.round(
+        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      );
+      setMetrics((prev) => ({ ...prev, avgResponse: avg }));
+    }
+  }, [responseTimes]);
+
   // Handle action button click
   const handleAction = useCallback((action) => {
     if (!isConnected) {
@@ -197,135 +133,117 @@ function App() {
       return;
     }
 
+    const timestamp = new Date().toISOString();
+    const sentAt = Date.now();
+
     socket.emit('USER_ACTION', {
       action,
       metadata: {
-        timestamp: new Date().toISOString(),
+        timestamp,
         sessionId: socket.id,
       },
+      sentAt,
     });
 
-    setActionCount((prev) => prev + 1);
+    // Add to activity feed
+    const newActivity = {
+      id: Date.now(),
+      action,
+      timestamp,
+      details: `Session: ${socket.id?.slice(0, 8)}...`,
+    };
+
+    setActivities((prev) => [newActivity, ...prev].slice(0, 50));
+    setMetrics((prev) => ({
+      ...prev,
+      totalActions: prev.totalActions + 1,
+    }));
+
     addToast(`Emitting "${action}" action...`, 'info');
   }, [isConnected, addToast]);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-slate-800/40 backdrop-blur-xl bg-slate-900/20 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
-          {/* Logo & Branding */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-4"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 
-                            flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span className="text-xl">🛡️</span>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold gradient-text">
-                ChurnGuard
-              </h1>
-              <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">
-                Phase 1 • Real-Time
-              </span>
-            </div>
-          </motion.div>
+  // If on admin page, render AdminPage component
+  if (currentPage === 'admin') {
+    return <AdminPage onBack={() => setCurrentPage('dashboard')} socket={socket} />;
+  }
 
-          <ConnectionStatus isConnected={isConnected} />
-        </div>
-      </header>
+  return (
+    <div className="dashboard-layout">
+      {/* Sidebar */}
+      <Sidebar
+        isConnected={isConnected}
+        activeNav={activeNav}
+        onNavChange={setActiveNav}
+      />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-8 py-16">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="text-center mb-16 max-w-2xl"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-100 mb-6 leading-tight">
-            SaaS Action
-            <span className="block gradient-text text-glow">Simulator</span>
-          </h2>
-          <p className="text-lg text-slate-400 leading-relaxed">
-            Click any action button to emit a real-time event to the server.
-            <br />
-            <span className="text-slate-500">Watch your terminal for live logs.</span>
-          </p>
-        </motion.div>
+      <main className="main-content">
+        {/* Header */}
+        <header className="dashboard-header">
+          <div className="header-title">
+            <h1>ChurnGuard Dashboard</h1>
+            <span className="header-subtitle">
+              Real-time user activity monitoring • Phase 4
+            </span>
+          </div>
 
-        {/* Action Buttons Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.7, ease: 'easeOut' }}
-          className="flex flex-wrap justify-center gap-8 mb-16"
-        >
-          <ActionButton
-            icon="🔍"
-            label="Search"
-            action="search"
-            onClick={handleAction}
-            disabled={!isConnected}
-          />
-          <ActionButton
-            icon="📤"
-            label="Export"
-            action="export"
-            onClick={handleAction}
-            disabled={!isConnected}
-          />
-          <ActionButton
-            icon="🎧"
-            label="Support"
-            action="support"
-            onClick={handleAction}
-            disabled={!isConnected}
-          />
-        </motion.div>
+          {/* Admin Link */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setCurrentPage('admin')}
+            className="admin-link"
+          >
+            <ExclamationTriangleIcon className="w-4 h-4" />
+            Intervention Center
+          </motion.button>
+        </header>
 
-        {/* Stats Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="glass-strong rounded-2xl flex items-center divide-x divide-slate-700/30
-                     shadow-2xl shadow-black/20"
-        >
-          <StatCard
-            value={actionCount}
-            label="Actions Sent"
-            color="indigo"
+        {/* Metrics Grid */}
+        <div className="metrics-grid">
+          <MetricCard
+            title="Total Actions"
+            value={metrics.totalActions}
+            trend="+12%"
+            trendDirection="up"
+            color="purple"
           />
-          <StatCard
-            icon={isConnected ? '🟢' : '🔴'}
-            label="Status"
-            color="emerald"
+          <MetricCard
+            title="Active Users"
+            value={metrics.activeUsers}
+            trend="-1"
+            trendDirection="down"
+            color="blue"
           />
-        </motion.div>
+          <MetricCard
+            title="Success Rate"
+            value={`${metrics.successRate}%`}
+            color="green"
+          />
+          <MetricCard
+            title="Avg Response"
+            value={`${metrics.avgResponse}ms`}
+            trend="-5ms"
+            trendDirection="down"
+            color="cyan"
+          />
+        </div>
+
+        {/* Content Grid */}
+        <div className="content-grid">
+          {/* Activity Feed */}
+          <ActivityFeed activities={activities} maxItems={8} />
+
+          {/* Quick Actions */}
+          <QuickActions onAction={handleAction} isConnected={isConnected} />
+        </div>
+
+        {/* Live Chart */}
+        <LiveChart data={activities} title="Action Count Over Time" />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/30 py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-slate-600 text-sm">
-            Real-time powered by Socket.IO
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-xs">Session:</span>
-            <code className="font-mono text-xs text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg">
-              {socket.id || '—'}
-            </code>
-          </div>
-        </div>
-      </footer>
-
       {/* Toast Container */}
-      <div className="fixed top-6 right-6 flex flex-col gap-3 z-50">
+      <div className="toast-container">
         <AnimatePresence>
           {toasts.map((toast) => (
             <Toast
