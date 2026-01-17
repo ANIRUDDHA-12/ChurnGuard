@@ -14,36 +14,63 @@ ChurnGuard is built on a Polyglot Microservices architecture, utilizing a "best-
 4.	The Sentinel (Background Agent): An autonomous Node.js worker that monitors the data, executes interventions, and manages safety cooldowns.
 ________________________________________
 ✨ Core Features
+
+
 🎯 Real-Time Behavioral Tracking
+
+
 Unlike traditional "Batch" analytics, ChurnGuard updates a user's risk profile the moment they interact with the app.
 •	Event Ingestion: Powered by Socket.io for zero-latency updates.
 •	Activity Heatmaps: Visualizes user engagement levels across different modules.
+
+
 🛡️ Intervention Command Center
+
+
 A dedicated /admin dashboard for Customer Success Managers to:
 •	Visualize Risk: Color-coded user lists (Red: High, Yellow: Med, Green: Low).
 •	One-Click Actions: Manually trigger "Nudges," "Priority Support," or "Special Offers".
 •	Live Audit Trail: See every action taken by both humans and the AI Sentinel.
 ________________________________________
+
+
 🧠 Intelligence Layer (SHAP)
+
+
 ChurnGuard solves the "Black Box" AI problem by integrating SHAP (SHapley Additive exPlanations).
 Why SHAP?
 The system doesn't just output a percentage. It explains the drivers of that score:
 •	Red Indicators: Factors increasing churn (e.g., "Support Tickets > 5").
 •	Blue Indicators: Factors decreasing churn (e.g., "Export Tool Usage > 10").
 XAI (Explainable AI): Every high-risk prediction is accompanied by a human-readable justification, allowing your team to act with confidence.
+
+
 ________________________________________
+
+
 🤖 The Automated Sentinel
+
+
 The Sentinel is your 24/7 Digital Retention Agent. It operates on a Tiered Logic system:
 Risk Level	Automatic Action	Logic
 85% - 90%	✉️ Auto-Nudge		Send a re-engagement email/notification.
 90% - 95%	🎫 Support Priority	Flag the user for an immediate CSM call.
 > 95%		💎 Offer Drop		Automatically apply a discount or credit.
+
 🛡️ Safety Guards
+
+
 •	24h Cooldown: Prevents the AI from spamming a single user.
 •	Human Priority: If a human CSM has talked to the user in the last 12h, the Sentinel stands down.
 •	Dry Run Mode: Test the Sentinel's logic in the logs without actually triggering emails.
+
+
 ________________________________________
+
+
 🛠️ Tech Stack
+
+
 Frontend
 •	Framework: React 19 (Vite)
 •	Styling: Tailwind CSS + Framer Motion
@@ -57,8 +84,14 @@ ML Engine (Python)
 •	Framework: FastAPI
 •	ML Model: XGBoost Classifier
 •	Explainability: SHAP
+
+
 ________________________________________
+
+
 🚀 Quick Start & Installation
+
+
 1. Prerequisites
 •	Node.js v20+
 •	Python 3.13+
@@ -83,8 +116,14 @@ cd ml-service && venv\Scripts\activate && pip install -r requirements.txt && uvi
 
 # Terminal 3: React UI
 cd client && npm install && npm run dev
+
+
 ________________________________________
+
+
 🔧 Technical Challenges & Solutions
+
+
 1. Python 3.13 Compatibility
 Problem: Several ML libraries lacked stable binary wheels for Python 3.13.
 Solution: Built a Resilient Inference Layer that falls back to Scikit-Learn's HistGradientBoostingClassifier if native C++ compilation for XGBoost fails, ensuring cross-platform stability.
