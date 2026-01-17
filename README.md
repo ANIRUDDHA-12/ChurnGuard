@@ -1,199 +1,135 @@
-# 🛡️ ChurnGuard - Real-Time Churn Prevention System
+🛡️ ChurnGuard: Real-Time AI Churn Prevention
 
-[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
-[![Python](https://img.shields.io/badge/Python-3.11+-yellow.svg)](https://python.org/)
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-ChurnGuard is an intelligent, real-time customer churn prevention platform that combines machine learning with automated intervention strategies to retain at-risk customers.
+"Stopping customer attrition before it happens through Agentic AI and Real-Time Behavioral Intelligence."
 
-![ChurnGuard Dashboard](docs/dashboard-preview.png)
 
-## ✨ Features
+ChurnGuard is a professional-grade, full-stack AI platform that predicts and prevents customer churn. By bridging Node.js/React with a Python Machine Learning core, it creates a closed-loop system: Perceive (Real-time logs), Predict (XGBoost), and Prevent (Automated Sentinel).
+________________________________________
+🏗️ System Architecture
+ChurnGuard is built on a Polyglot Microservices architecture, utilizing a "best-of-breed" approach for each component:
+1.	The Sensor (React 19 Frontend): Captures high-frequency micro-interactions (clicks, feature usage, session patterns) via WebSockets.
+2.	The Memory (Node.js + Supabase): Acts as a high-speed "Data Lake." Ingests event streams and persists them into a structured PostgreSQL schema.
+3.	The Brain (FastAPI + XGBoost): A Python-based inference engine that calculates churn probability and SHAP explainability values in sub-50ms.
+4.	The Sentinel (Background Agent): An autonomous Node.js worker that monitors the data, executes interventions, and manages safety cooldowns.
+________________________________________
+✨ Core Features
 
-### 🎯 Core Capabilities
-- **ML-Powered Risk Scoring** - XGBoost model predicts churn probability in real-time
-- **Automated Sentinel** - Scans and flags at-risk users automatically
-- **Tiered Interventions** - Nudge, Support, and Offer strategies based on risk level
-- **Self-Optimizing Loop** - Tracks intervention efficacy and learns from outcomes
 
-### 📊 Analytics & Insights
-- **Trend Charts** - Visualize churn rates over time
-- **ROI Calculator** - Track revenue saved per intervention type
-- **Cohort Analysis** - Understand churn by signup period
-- **User Segmentation** - Power Users, At-Risk, Dormant, etc.
+🎯 Real-Time Behavioral Tracking
 
-### 🏢 Enterprise Features
-- **Role-Based Access Control** - Admin, Operator, Viewer roles
-- **Audit Logging** - Track all system actions
-- **Feature Drift Detection** - Alert when data patterns change
-- **Configurable Settings** - Risk thresholds, LTV, intervals
 
-## 🚀 Quick Start
+Unlike traditional "Batch" analytics, ChurnGuard updates a user's risk profile the moment they interact with the app.
+•	Event Ingestion: Powered by Socket.io for zero-latency updates.
+•	Activity Heatmaps: Visualizes user engagement levels across different modules.
 
-### Prerequisites
-- Node.js 20+
-- Python 3.11+
-- Supabase account (for database)
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/yourusername/ChurnGuard-RealTime.git
-cd ChurnGuard-RealTime
-```
+🛡️ Intervention Command Center
 
-### 2. Setup Server
-```bash
-cd server
-npm install
-cp .env.example .env
-# Edit .env with your Supabase credentials
-npm run dev
-```
 
-### 3. Setup ML Service
-```bash
-cd ml-service
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Mac/Linux
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your Supabase credentials
-uvicorn main:app --reload --port 8000
-```
+A dedicated /admin dashboard for Customer Success Managers to:
+•	Visualize Risk: Color-coded user lists (Red: High, Yellow: Med, Green: Low).
+•	One-Click Actions: Manually trigger "Nudges," "Priority Support," or "Special Offers".
+•	Live Audit Trail: See every action taken by both humans and the AI Sentinel.
+________________________________________
 
-### 4. Setup Client
-```bash
-cd client
-npm install
-npm run dev
-```
 
-### 5. Open Browser
-Navigate to **http://localhost:5173**
+🧠 Intelligence Layer (SHAP)
 
-**Demo Credentials:**
-| Username | Password | Role |
-|----------|----------|------|
-| admin | admin123 | Admin |
-| operator | op123 | Operator |
-| viewer | view123 | Viewer |
 
-## 📁 Project Structure
+ChurnGuard solves the "Black Box" AI problem by integrating SHAP (SHapley Additive exPlanations).
+Why SHAP?
+The system doesn't just output a percentage. It explains the drivers of that score:
+•	Red Indicators: Factors increasing churn (e.g., "Support Tickets > 5").
+•	Blue Indicators: Factors decreasing churn (e.g., "Export Tool Usage > 10").
+XAI (Explainable AI): Every high-risk prediction is accompanied by a human-readable justification, allowing your team to act with confidence.
 
-```
-ChurnGuard-RealTime/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── App.jsx         # Main app
-│   │   └── index.css       # Styles
-│   └── package.json
-├── server/                 # Node.js backend
-│   ├── lib/                # Utilities
-│   │   ├── supabase.js     # DB client
-│   │   ├── sentinelConfig.js
-│   │   ├── auditLog.js     # Audit logging
-│   │   ├── rbac.js         # Role-based access
-│   │   └── emailService.js # Email templates
-│   ├── sentinel.js         # Auto-intervention engine
-│   ├── optimizer.js        # Efficacy tracker
-│   ├── index.js            # Express server
-│   └── sql/                # Database migrations
-├── ml-service/             # Python ML API
-│   ├── main.py             # FastAPI endpoints
-│   ├── train_model.py      # Model training
-│   ├── models/             # Saved models
-│   └── requirements.txt
-└── docs/                   # Documentation
-```
 
-## 🔌 API Endpoints
+________________________________________
 
-### Server (Port 3001)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/intervene` | Create intervention |
-| GET | `/api/users` | List all users |
-| GET | `/api/sentinel/status` | Sentinel status |
-| POST | `/api/sentinel/run` | Trigger Sentinel |
-| GET | `/api/efficacy` | Intervention success rates |
-| GET | `/api/analytics/trends` | Churn trends |
-| GET | `/api/analytics/roi` | ROI by action type |
-| GET | `/api/analytics/cohorts` | Cohort analysis |
-| GET | `/api/audit/logs` | Audit logs |
-| GET | `/api/roles` | Available roles |
+🤖 The Automated Sentinel
 
-### ML Service (Port 8000)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/predict` | Single prediction |
-| POST | `/predict/batch` | Batch predictions |
-| GET | `/segments` | User segments |
-| GET | `/model/drift` | Drift detection |
-| POST | `/model/retrain` | Trigger retraining |
-| GET | `/health` | Health check |
+The Sentinel is your 24/7 Digital Retention Agent. It operates on a Tiered Logic system:
+Risk Level	Automatic Action	Logic
+85% - 90%	✉️ Auto-Nudge		Send a re-engagement email/notification.
+90% - 95%	🎫 Support Priority	Flag the user for an immediate CSM call.
+> 95%		💎 Offer Drop		Automatically apply a discount or credit.
 
-## ⚙️ Configuration
+🛡️ Safety Guards
 
-### Environment Variables
 
-**Server (.env)**
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-PORT=3001
-```
+•	24h Cooldown: Prevents the AI from spamming a single user.
+•	Human Priority: If a human CSM has talked to the user in the last 12h, the Sentinel stands down.
+•	Dry Run Mode: Test the Sentinel's logic in the logs without actually triggering emails.
 
-**ML Service (.env)**
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-```
 
-### Supabase Tables
+________________________________________
 
-Run these SQL scripts in Supabase SQL Editor:
-1. `server/sql/create_user_segments.sql`
-2. `server/sql/create_interventions.sql`
-3. `server/sql/add_source_column.sql`
-4. `server/sql/add_outcome_columns.sql`
-5. `server/sql/create_audit_logs.sql`
 
-## 🎨 UI Pages
+🛠️ Tech Stack
 
-| Page | Access | Description |
-|------|--------|-------------|
-| Dashboard | All | Main metrics & activity |
-| Analytics | All | Trends, ROI, Cohorts |
-| ML Intelligence | All | Segments, Drift |
-| Intervention Center | Admin/Operator | Manage interventions |
-| Audit & Access | Admin | Logs, RBAC |
-| Settings | Admin | Configuration |
 
-## 📱 Mobile Support
+Frontend
+•	Framework: React 19 (Vite)
+•	Styling: Tailwind CSS + Framer Motion
+•	Charts: Recharts (Real-time Analytics)
+Backend (Node.js)
+•	Server: Express.js
+•	Communication: Socket.io (WebSockets)
+•	Database: Supabase / PostgreSQL
+•	Automation: Node-Cron
+ML Engine (Python)
+•	Framework: FastAPI
+•	ML Model: XGBoost Classifier
+•	Explainability: SHAP
 
-ChurnGuard is fully responsive with:
-- Bottom navigation on mobile
-- Touch-friendly buttons
-- Collapsible sidebar
-- Stacked layouts
 
-## 🤝 Contributing
+________________________________________
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open a Pull Request
 
-## 📄 License
+🚀 Quick Start & Installation
 
-MIT License - see [LICENSE](LICENSE) for details.
 
----
+1. Prerequisites
+•	Node.js v20+
+•	Python 3.13+
+•	Supabase Account
+2. Environment Setup
+Create a .env file in both /server and /ml-service:
+Code snippet
+SUPABASE_URL=your_project_url
+SUPABASE_KEY=your_service_role_key
+3. Database Initialization
+Run the SQL scripts in server/sql/ via the Supabase SQL Editor:
+1.	create_user_activity.sql
+2.	create_interventions.sql
+3.	add_outcome_columns.sql
+4. Launch the Stack
+Bash
+# Terminal 1: Node Server
+cd server && npm install && npm run dev
 
-Built with ❤️ for customer success teams
+# Terminal 2: ML API
+cd ml-service && venv\Scripts\activate && pip install -r requirements.txt && uvicorn main:app --port 8000
+
+# Terminal 3: React UI
+cd client && npm install && npm run dev
+
+
+________________________________________
+
+
+🔧 Technical Challenges & Solutions
+
+
+1. Python 3.13 Compatibility
+Problem: Several ML libraries lacked stable binary wheels for Python 3.13.
+Solution: Built a Resilient Inference Layer that falls back to Scikit-Learn's HistGradientBoostingClassifier if native C++ compilation for XGBoost fails, ensuring cross-platform stability.
+2. Polyglot State Synchronization
+Problem: Managing real-time data across JavaScript and Python ecosystems.
+Solution: Implemented a Shared-Secret API Contract using the Supabase Service Role Key, allowing the Node.js Sentinel to trigger predictions while the Python service queries the live database concurrently.
+
+
+Built with ❤️ by Aniruddha Payas as a Masterpiece in Vibe Coding & Agentic Systems
