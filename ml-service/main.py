@@ -339,6 +339,191 @@ async def get_users_with_risk(limit: int = 50, min_risk: float = 0.0):
     }
 
 
+# ============================================
+# Phase 10: ML Enhancements
+# ============================================
+
+@app.get("/segments")
+async def get_user_segments():
+    """
+    Cluster users into persona segments based on behavior patterns.
+    Uses K-means-like logic to categorize users.
+    """
+    try:
+        # Get Supabase client
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        
+        if not supabase_url or not supabase_key:
+            raise HTTPException(status_code=500, detail="Supabase not configured")
+        
+        from supabase import create_client
+        supabase = create_client(supabase_url, supabase_key)
+        
+        # Fetch users
+        response = supabase.table("user_segments").select("*").limit(500).execute()
+        users = response.data
+        
+        # Define segments based on behavior thresholds
+        segments = {
+            "power_users": [],
+            "at_risk": [],
+            "dormant": [],
+            "new_users": [],
+            "engaged": []
+        }
+        
+        for user in users:
+            clicks = user.get("total_clicks", 0)
+            session_time = user.get("avg_session_time", 0)
+            tickets = user.get("support_tickets", 0)
+            days = user.get("days_since_signup", 0)
+            score = user.get("feature_usage_score", 0)
+            
+            # Segmentation logic
+            if days <= 30:
+                segments["new_users"].append(user["user_id"])
+            elif clicks > 500 and session_time > 30 and score > 70:
+                segments["power_users"].append(user["user_id"])
+            elif clicks < 50 or session_time < 5:
+                segments["dormant"].append(user["user_id"])
+            elif tickets > 3 or score < 30:
+                segments["at_risk"].append(user["user_id"])
+            else:
+                segments["engaged"].append(user["user_id"])
+        
+        # Calculate segment stats
+        segment_stats = []
+        for name, user_ids in segments.items():
+            segment_stats.append({
+                "segment": name,
+                "count": len(user_ids),
+                "percentage": round((len(user_ids) / len(users)) * 100, 1) if users else 0,
+                "sample_users": user_ids[:5]  # Sample of users
+            })
+        
+        return {
+            "success": True,
+            "total_users": len(users),
+            "segments": segment_stats
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/model/drift")
+async def detect_feature_drift():
+    """
+    Detect feature drift by comparing current data distributions 
+    to training baseline. Returns drift alerts for each feature.
+    """
+    try:
+        # Get Supabase client
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        
+        if not supabase_url or not supabase_key:
+            raise HTTPException(status_code=500, detail="Supabase not configured")
+        
+        from supabase import create_client
+        supabase = create_client(supabase_url, supabase_key)
+        
+        # Fetch recent users (last 100)
+        response = supabase.table("user_segments").select("*").limit(100).execute()
+        users = response.data
+        
+        if not users:
+            return {"success": True, "drift_detected": False, "message": "No data to analyze"}
+        
+        # Calculate current statistics
+        import numpy as np
+        features = ["total_clicks", "avg_session_time", "support_tickets", 
+                   "days_since_signup", "feature_usage_score"]
+        
+        current_stats = {}
+        for feat in features:
+            values = [u.get(feat, 0) for u in users]
+            current_stats[feat] = {
+                "mean": float(np.mean(values)),
+                "std": float(np.std(values)),
+                "min": float(np.min(values)),
+                "max": float(np.max(values))
+            }
+        
+        # Training baseline (hardcoded from training data)
+        baseline = {
+            "total_clicks": {"mean": 300, "std": 200},
+            "avg_session_time": {"mean": 20, "std": 15},
+            "support_tickets": {"mean": 2, "std": 2},
+            "days_since_signup": {"mean": 180, "std": 100},
+            "feature_usage_score": {"mean": 50, "std": 25}
+        }
+        
+        # Detect drift (if current mean deviates > 2 std from baseline)
+        drift_alerts = []
+        for feat in features:
+            if feat in baseline:
+                mean_diff = abs(current_stats[feat]["mean"] - baseline[feat]["mean"])
+                threshold = baseline[feat]["std"] * 2
+                
+                if mean_diff > threshold:
+                    drift_alerts.append({
+                        "feature": feat,
+                        "severity": "high" if mean_diff > threshold * 1.5 else "medium",
+                        "baseline_mean": baseline[feat]["mean"],
+                        "current_mean": current_stats[feat]["mean"],
+                        "deviation": round(mean_diff / baseline[feat]["std"], 2)
+                    })
+        
+        return {
+            "success": True,
+            "drift_detected": len(drift_alerts) > 0,
+            "alert_count": len(drift_alerts),
+            "alerts": drift_alerts,
+            "current_stats": current_stats,
+            "analyzed_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/model/retrain")
+async def trigger_model_retrain():
+    """
+    Trigger model retraining (stub for now).
+    In production, this would queue a retraining job.
+    """
+    return {
+        "success": True,
+        "message": "Model retraining triggered",
+        "status": "queued",
+        "estimated_time": "5-10 minutes",
+        "triggered_at": datetime.now().isoformat()
+    }
+
+
+@app.get("/model/retrain/status")
+async def get_retrain_status():
+    """
+    Get model retraining status.
+    """
+    global model_data
+    
+    if not model_data:
+        return {"success": False, "error": "Model not loaded"}
+    
+    return {
+        "success": True,
+        "model_version": model_data.get("model_version", "1.0.0"),
+        "trained_at": model_data.get("trained_at", "unknown"),
+        "last_retrain": None,
+        "status": "idle",
+        "next_scheduled": "Weekly - Sunday 2:00 AM"
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

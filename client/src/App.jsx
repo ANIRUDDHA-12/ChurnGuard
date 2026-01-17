@@ -10,6 +10,11 @@ import ActivityFeed from './components/ActivityFeed';
 import QuickActions from './components/QuickActions';
 import LiveChart from './components/LiveChart';
 import AdminPage from './components/AdminPage';
+import AnalyticsPage from './components/AnalyticsPage';
+import MLPage from './components/MLPage';
+import AuditPage from './components/AuditPage';
+import LoginPage from './components/LoginPage';
+import SettingsPage from './components/SettingsPage';
 
 // Socket.IO connection
 const socket = io('http://localhost:3001', {
@@ -58,6 +63,22 @@ function App() {
   const [activeNav, setActiveNav] = useState('dashboard');
   const [responseTimes, setResponseTimes] = useState([]);
   const [currentPage, setCurrentPage] = useState('dashboard');
+
+  // Authentication state
+  const [session, setSession] = useState(() => {
+    const saved = localStorage.getItem('churnguard_session');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const handleLogin = (userSession) => {
+    setSession(userSession);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('churnguard_session');
+    setSession(null);
+    setCurrentPage('dashboard');
+  };
 
   // Add toast notification
   const addToast = useCallback((message, type = 'info') => {
@@ -162,9 +183,34 @@ function App() {
     addToast(`Emitting "${action}" action...`, 'info');
   }, [isConnected, addToast]);
 
+  // If not logged in, show login page
+  if (!session) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   // If on admin page, render AdminPage component
   if (currentPage === 'admin') {
-    return <AdminPage onBack={() => setCurrentPage('dashboard')} socket={socket} />;
+    return <AdminPage onBack={() => setCurrentPage('dashboard')} socket={socket} session={session} onLogout={handleLogout} />;
+  }
+
+  // If on analytics page, render AnalyticsPage component
+  if (currentPage === 'analytics') {
+    return <AnalyticsPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  // If on ML page, render MLPage component
+  if (currentPage === 'ml') {
+    return <MLPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  // If on audit page, render AuditPage component
+  if (currentPage === 'audit') {
+    return <AuditPage onBack={() => setCurrentPage('dashboard')} />;
+  }
+
+  // If on settings page, render SettingsPage component
+  if (currentPage === 'settings') {
+    return <SettingsPage onBack={() => setCurrentPage('dashboard')} />;
   }
 
   return (
@@ -173,7 +219,10 @@ function App() {
       <Sidebar
         isConnected={isConnected}
         activeNav={activeNav}
-        onNavChange={setActiveNav}
+        onNavChange={(nav) => {
+          setActiveNav(nav);
+          setCurrentPage(nav);
+        }}
       />
 
       {/* Main Content */}
@@ -183,7 +232,7 @@ function App() {
           <div className="header-title">
             <h1>ChurnGuard Dashboard</h1>
             <span className="header-subtitle">
-              Real-time user activity monitoring • Phase 4
+              Real-time churn prevention & intervention
             </span>
           </div>
 
@@ -194,9 +243,19 @@ function App() {
             onClick={() => setCurrentPage('admin')}
             className="admin-link"
           >
-            <ExclamationTriangleIcon className="w-4 h-4" />
-            Intervention Center
+            🛡️ Intervention Center
           </motion.button>
+
+          {/* User Header */}
+          <div className="user-header">
+            <div className="user-info">
+              <span className="user-name">{session?.name || 'User'}</span>
+              <span className="user-role">{session?.role || 'viewer'}</span>
+            </div>
+            <button className="logout-btn" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
         </header>
 
         {/* Metrics Grid */}
