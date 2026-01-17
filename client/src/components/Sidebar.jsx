@@ -4,6 +4,8 @@ import {
     HomeIcon,
     BoltIcon,
     ChartBarIcon,
+    CpuChipIcon,
+    ShieldCheckIcon,
     Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 
@@ -11,6 +13,8 @@ const navItems = [
     { id: 'dashboard', icon: HomeIcon, label: 'Dashboard' },
     { id: 'activity', icon: BoltIcon, label: 'Activity' },
     { id: 'analytics', icon: ChartBarIcon, label: 'Analytics' },
+    { id: 'ml', icon: CpuChipIcon, label: 'ML Intelligence' },
+    { id: 'audit', icon: ShieldCheckIcon, label: 'Audit & Access' },
     { id: 'settings', icon: Cog6ToothIcon, label: 'Settings' },
 ];
 
