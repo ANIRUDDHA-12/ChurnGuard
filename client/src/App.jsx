@@ -15,9 +15,10 @@ import MLPage from './components/MLPage';
 import AuditPage from './components/AuditPage';
 import LoginPage from './components/LoginPage';
 import SettingsPage from './components/SettingsPage';
+import { SERVER_URL, SOCKET_CONFIG } from './config';
 
 // Socket.IO connection
-const socket = io('http://localhost:3001', {
+const socket = io(SERVER_URL, {
   autoConnect: true,
   reconnection: true,
   reconnectionDelay: 1000,

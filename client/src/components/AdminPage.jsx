@@ -14,9 +14,10 @@ import {
 import SentinelPanel from './SentinelPanel';
 import ThemeToggle from './ThemeToggle';
 import UserDrawer from './UserDrawer';
+import { SERVER_URL, ML_API_URL } from '../config';
 
-const API_BASE = 'http://localhost:8000';
-const SERVER_BASE = 'http://localhost:3001';
+const API_BASE = ML_API_URL;
+const SERVER_BASE = SERVER_URL;
 
 // Reason badge colors
 const reasonColors = {

@@ -9,8 +9,9 @@ import {
     CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import ThemeToggle from './ThemeToggle';
+import { SERVER_URL } from '../config';
 
-const SERVER_BASE = 'http://localhost:3001';
+const SERVER_BASE = SERVER_URL;
 
 // Summary Card Component
 function SummaryCard({ icon: Icon, label, value, subValue, color }) {
