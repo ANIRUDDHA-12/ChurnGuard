@@ -14,15 +14,24 @@ const { ROLES, PERMISSIONS, requirePermission, getRoleInfo } = require('./lib/rb
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.IO with CORS for Vite dev server
+// CORS origins - include production URL from env
+const corsOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5174',
+    process.env.CORS_ORIGIN // Production frontend URL
+].filter(Boolean);
+
+// Socket.IO with CORS
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
+        origin: corsOrigins,
         methods: ['GET', 'POST']
     }
 });
 
-app.use(cors());
+app.use(cors({ origin: corsOrigins }));
 app.use(express.json());
 
 // Health check endpoint

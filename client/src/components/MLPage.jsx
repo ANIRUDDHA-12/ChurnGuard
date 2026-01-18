@@ -9,8 +9,9 @@ import {
     ChartPieIcon,
 } from '@heroicons/react/24/outline';
 import ThemeToggle from './ThemeToggle';
+import { ML_API_URL } from '../config';
 
-const ML_API_BASE = 'http://localhost:8000';
+const ML_API_BASE = ML_API_URL;
 
 // Segment colors
 const segmentColors = {

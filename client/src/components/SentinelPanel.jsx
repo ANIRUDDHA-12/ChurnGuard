@@ -8,8 +8,9 @@ import {
     ClockIcon,
     ChartBarIcon,
 } from '@heroicons/react/24/outline';
+import { SERVER_URL } from '../config';
 
-const SERVER_BASE = 'http://localhost:3001';
+const SERVER_BASE = SERVER_URL;
 
 // Activity item component
 function ActivityItem({ activity }) {
